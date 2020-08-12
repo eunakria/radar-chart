@@ -7,9 +7,11 @@ const defaultValue = `\
 size: 400 x 400
 margin: 10
 background: white
+#interval background: white
 text color: black
 text size: 16
 stroke color: grey
+#interval stroke color: black
 main stroke width: 1
 entry stroke width: 2
 filled entries: yes
@@ -17,6 +19,8 @@ filled entries: yes
 # You can specify 'none' to not draw interval lines.
 scale: 100
 intervals: 20
+#interval labels: E D C B A S
+#hide labels: no
 
 # Which way to angle the chart. Either 'first radius',
 # 'first side' or 'last side'.
@@ -162,14 +166,16 @@ function update() {
 
 		else if ([
 			'background', 'text color', 'stroke color',
+			'interval background', 'interval stroke color',
 		].includes(key)) {
 			key = key.replace(/ (\w)/g, (_, g1) => g1.toUpperCase())
 			props[key] = val
 		}
 
-		else if (key === 'filled entries') {
+		else if (['filled entries', 'hide labels'].includes(key)) {
+			let nKey = key.replace(/ (\w)/g, (_, g1) => g1.toUpperCase())
 			val = val.trim()
-			props.filledEntries =
+			props[nKey] =
 				val === 'yes' ? true :
 				val === 'no' ? false :
 				errImproper(key, idx)
@@ -184,6 +190,10 @@ function update() {
 				val === 'last side' ? 'ls' :
 				errImproper(key, idx)
 			if (didError) { return }
+		}
+
+		else if (key === 'interval labels') {
+			props.intLabels = val.trim().split(/\s+/)
 		}
 
 		// This condition accounts for multiple properties to avoid
@@ -306,7 +316,7 @@ function update() {
 	}
 	
 	// Alright, we're done! Good job making it to the end :)
-	// We still have three more checks to perform, comparing values to each
+	// We still have a few more checks to perform, comparing values to each
 	// other; they're listed here.
 	if (
 		props.intervals !== null &&
@@ -325,6 +335,26 @@ function update() {
 		error('Number of entries does not match defined entries',
 			dataMap.get('entries')[0])
 		return
+	}
+	if (props.intLabels === undefined) {
+		props.intLabels = []
+		for (let val = 0; val <= props.scale; val += props.intervals) {
+			props.intLabels.push(val.toString())
+		}
+	} else if (props.intLabels.length !== props.scale/props.intervals + 1) {
+		let n = props.scale / props.intervals + 1
+		error(`Incorrect number of interval labels (expected ${n})`,
+			dataMap.get('interval labels')[0])
+		return
+	}
+	if (props.intervalStrokeColor === undefined) {
+		props.intervalStrokeColor = props.textColor
+	}
+	if (props.intervalBackground === undefined) {
+		props.intervalBackground = props.background
+	}
+	if (props.hideLabels === undefined) {
+		props.hideLabels = false
 	}
 
 	// First 'entries' to get the list of entries in the graph, second
@@ -453,12 +483,13 @@ function drawGraph(props) {
 
 	// If intervals are being used, label them.
 	let intLabels = []
-	if (props.intervals !== null) {
+	if (props.intervals !== null && !props.hideLabels) {
 		const boxPad = 2
 		let maxOffset = points[0][1]
 
 		for (let val = 0; val <= props.scale; val += props.intervals) {
-			let boxWidth = measureText(val.toString(), props.textSize*0.5) + boxPad
+			let lblText = props.intLabels[val/props.intervals]
+			let boxWidth = measureText(lblText, props.textSize*0.5) + boxPad
 			let boxHeight = props.textSize*0.5 + boxPad
 			let offset = val / props.scale * maxOffset
 
@@ -471,7 +502,7 @@ function drawGraph(props) {
 				<text class="desc-text"
 					x="${props.width/2}"
 					y="${props.height/2 + offset + props.textSize*0.25 - boxPad/2}"
-				>${val}</text>
+				>${lblText}</text>
 			`)
 		}
 	}
@@ -488,6 +519,7 @@ function drawGraph(props) {
 			}
 			text {
 				text-anchor: middle;
+				fill: ${props.textColor};
 			}
 			.entry {
 				fill-opacity: ${props.filledEntries ? 50 : 0}%;
@@ -498,8 +530,8 @@ function drawGraph(props) {
 				stroke-width: ${props.mainStrokeWidth};
 			}
 			.desc-box {
-				fill: ${props.background};
-				stroke: ${props.textColor};
+				fill: ${props.intervalBackground};
+				stroke: ${props.intervalStrokeColor};
 				stroke-width: ${props.mainStrokeWidth};
 			}
 			.desc-text {
