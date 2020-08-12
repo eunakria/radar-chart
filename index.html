@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Radar chart generator</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.56.0/codemirror.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.56.0/codemirror.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.56.0/addon/mode/simple.min.js"></script>
+	<link rel="stylesheet" href="main.css">
+	<script defer src="index.js"></script>
+</head>
+<body>
+	<main>
+		<h1>Radar chart generator</h1>
+		<p>by Linus Parker (mcboat)</p>
+		<div class="panes">
+			<div class="display-pane">
+				<div id="chart-container">
+					<p style="display: none;" id="alert"></p>
+					<svg id="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+				</div>
+			</div>
+			<div class="input-pane">
+			<div class="input-container">
+				<p>Input data:</p>
+				<div id="input"></div>
+				<div class="bar">
+					<label for="auto-update">
+						<input checked type="checkbox" name="auto-update" id="auto-update">
+						Auto-update
+					</label>
+					<div class="spacer"></div>
+					<button id="download">Download</button>
+					&nbsp;
+					<button disabled id="update">Update</button>
+				</div>
+			</div>
+			</div>
+		</div>
+	</main>
+	<span id="text-measure"></span>
+	<a id="perform-download"></a>
+</body>
+</html>
